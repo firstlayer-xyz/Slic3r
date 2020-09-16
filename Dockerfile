@@ -1,22 +1,30 @@
 # firstlayer.xyz
 FROM amazonlinux:latest
-RUN yum -y groupinstall "Development Tools" which
+RUN yum -y update && yum -y upgrade
+RUN yum -y install autoconf automake binutils gcc gcc-c++ gzip libtool make pkgconfig tar which
 
+# Can probably speed up this compils by disableing unneeded features
 RUN cd /tmp && \
     curl -L https://cmake.org/files/v3.18/cmake-3.18.2.tar.gz | tar -xz && \
-    cd cmake-3.18.2 && ./bootstrap && make -DCMAKE_USE_OPENSSL=OFF -j4 && make install && \
+    cd cmake-3.18.2 && ./bootstrap -- -DCMAKE_USE_OPENSSL=OFF && make -j4 && make install && \
     cd / && rm -rf /tmp/cmake-3.18.2
 
+# Can probably speed up this compils by disableing unneeded features
 RUN cd /tmp && \
-    curl -L https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.tar.gz | tar -xz && \
-    cd /tmp/boost_1_74_0 && ./bootstrap.sh && ./b2 --without-python link=static install && \
-    cd / && rm -rf /tmp/boost_1_74_0
+    curl -L https://dl.bintray.com/boostorg/release/1.63.0/source/boost_1_63_0.tar.gz | tar -xz && \
+    cd /tmp/boost_1_63_0 && ./bootstrap.sh && ./b2 --without-python link=static install && \
+    cd / && rm -rf /tmp/boost_1_63_0
 
-RUN mkdir /Slic3r
-COPY ./ /Slic3r/
-RUN cd /Slic3r/firstlayer.xyz && ./build_slic3r.sh
-RUN mkdir -p /Slic3r/firstlayer.xyz/build cd /Slic3r/firstlayer.xyz/build && cmake .. && make -j8
+COPY ./ /tmp/Slic3r/
+
+# If you are seeing "c++: internal compiler error: Killed" here, its because your out of ram
+RUN mkdir /tmp/Slic3r/build && cd /tmp/Slic3r/build && \
+    cmake ../src -DEnable_GUI=0 -DGUI_BUILD_TESTS=0 -DSLIC3R_BUILD_TESTS=0 -DSLIC3R_STATIC=1 -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build . -- -j2
+
+RUN mkdir /tmp/Slic3r/firstlayer.xyz/build && cd /tmp/Slic3r/firstlayer.xyz/build && \
+    cmake .. && make -j4
 
 FROM amazonlinux:latest
-COPY --from=0 /Slic3r/firstlayer.xyz/build/modelinfo /usr/bin
-COPY --from=0 /Slic3r/firstlayer.xyz/build/modeljson /usr/bin
+COPY --from=0 /tmp/Slic3r/firstlayer.xyz/build/modelinfo /usr/bin
+COPY --from=0 /tmp/Slic3r/firstlayer.xyz/build/modeljson /usr/bin
