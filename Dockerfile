@@ -15,7 +15,7 @@ RUN cd /tmp && \
     cd /tmp/boost_1_63_0 && ./bootstrap.sh && ./b2 --without-python link=static install && \
     cd / && rm -rf /tmp/boost_1_63_0
 
-# If you are seeing "c++: internal compiler error: Killed" here, its because your out of ram
+# If you are seeing "c++: internal compiler error: Killed" here, its because your're out of ram
 COPY ./xs /tmp/Slic3r/xs
 COPY ./src /tmp/Slic3r/src
 RUN mkdir /tmp/Slic3r/build && cd /tmp/Slic3r/build && \
