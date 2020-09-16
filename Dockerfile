@@ -4,7 +4,7 @@ RUN yum -y groupinstall "Development Tools" which
 
 RUN cd /tmp && \
     curl -L https://cmake.org/files/v3.18/cmake-3.18.2.tar.gz | tar -xz && \
-    cd cmake-3.18.2 && ./bootstrap && make -j4 && make install && \
+    cd cmake-3.18.2 && ./bootstrap && make -DCMAKE_USE_OPENSSL=OFF -j4 && make install && \
     cd / && rm -rf /tmp/cmake-3.18.2
 
 RUN cd /tmp && \
