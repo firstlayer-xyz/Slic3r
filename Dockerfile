@@ -1,7 +1,7 @@
 # firstlayer.xyz
 FROM amazonlinux:latest
 RUN yum -y update && yum -y upgrade
-RUN yum -y install autoconf automake binutils cmake3 gcc gcc-c++ gzip libtool make pkgconfig tar which
+RUN yum -y install autoconf automake binutils cmake3 gcc gcc-c++ gzip libcurl-devel libtool make pkgconfig tar which
 RUN ln /usr/bin/cmake3 /usr/bin/cmake
 
 # Can probably speed up this compile by disabling unneeded features
@@ -9,6 +9,11 @@ RUN cd /tmp && \
     curl -L https://dl.bintray.com/boostorg/release/1.63.0/source/boost_1_63_0.tar.gz | tar -xz && \
     cd /tmp/boost_1_63_0 && ./bootstrap.sh && ./b2 -j4 --without-python link=static install && \
     cd / && rm -rf /tmp/boost_1_63_0
+
+RUN cd /tmp && \
+    curl -L https://github.com/awslabs/aws-lambda-cpp/archive/v0.2.6.tar.gz | tar -xz && \
+    cd /tmp/aws-lambda-cpp-0.2.6 && cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF && make install && \
+    cd / && rm -rf /tmp/aws-lambda-cpp
 
 # If you are seeing "c++: internal compiler error: Killed" here, its because you're out of ram
 COPY ./xs /tmp/Slic3r/xs
